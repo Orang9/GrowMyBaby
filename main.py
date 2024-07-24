@@ -14,7 +14,7 @@ if st.session_state.logged_in:
     st.sidebar.title(f"Welcome, {st.session_state.username}")
     selected_page = st.sidebar.radio("Navigation", ["Home", "Logout"])
     if selected_page == "Home":
-        client = MongoClient("mongodb+srv://alfiSkibidi:alfi123@belajarcrud.p8wz7lk.mongodb.net/?retryWrites=true&w=majority&appName=BelajarCRUD")
+        client = MongoClient(st.secrets["MONGODB"]["uri"])
         db = client['sic5_belajar']
         collection = db['data_anak']
 
