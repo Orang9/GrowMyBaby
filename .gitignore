@@ -1,8 +1,15 @@
 # Environment
+.env
 env/
 
 # Secrets.toml
 secrets.toml
+
+# vercel.json
+vercel.json
+
+# streamlit_app.rar
+streamlit_app.rar
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

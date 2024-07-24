@@ -1,9 +1,17 @@
+import os
 from pymongo import MongoClient
-import streamlit as st
+from dotenv import load_dotenv
 
+# Memuat variabel lingkungan dari file .env
+load_dotenv()
+
+# Ambil URI MongoDB dari environment variable
+mongo_uri = os.getenv("MONGO_URI")
+if not mongo_uri:
+    raise ValueError("MONGO_URI environment variable not set")
 
 # Connect to MongoDB Atlas
-client = MongoClient(st.secrets["MONGODB"]["uri"])
+client = MongoClient(mongo_uri)
 db = client["sic5_belajar"]  # Replace with your database name
 users_collection = db["login"]  # Collection to store user information
 
