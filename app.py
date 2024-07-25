@@ -1,6 +1,10 @@
 from flask import Flask, request, jsonify
 import os
 from pymongo import MongoClient
+from dotenv import load_dotenv
+
+# Memuat variabel dari file .env
+load_dotenv()
 
 app = Flask(__name__)
 

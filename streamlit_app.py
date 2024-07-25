@@ -3,7 +3,11 @@ import os
 import pandas as pd
 import requests
 from pymongo import MongoClient
+from dotenv import load_dotenv
 from utils.db import get_user, add_user
+
+# Memuat variabel dari file .env
+load_dotenv()
 
 # Connect to MongoDB Atlas
 mongo_uri = os.getenv("MONGO_URI")
