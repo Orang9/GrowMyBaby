@@ -17,36 +17,45 @@ if not mongo_uri:
 client = MongoClient(mongo_uri)
 db = client["sic5_belajar"]
 
-def login():
-    st.title("Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Sign In"):
-        user = get_user(username, password)
-        if user:
-            st.session_state.logged_in = True
-            st.session_state.username = username
-            st.experimental_rerun()
-        else:
-            st.error("Invalid username or password")
+# Fungsi untuk mengecek apakah pengguna sudah login
+def is_logged_in():
+    return st.session_state.get('logged_in', False)
 
-def signup():
-    st.title("Sign Up")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-    if st.button("Sign Up"):
-        if add_user(username, password):
-            st.success("Account created successfully! Please go to the Login page to sign in.")
-        else:
-            st.error("Username already exists. Please choose a different username.")
+# Fungsi untuk logout
+def logout():
+    st.session_state['logged_in'] = False
+    st.experimental_rerun()
 
-def main():
-    if 'logged_in' not in st.session_state:
-        st.session_state.logged_in = False
-    if 'username' not in st.session_state:
-        st.session_state.username = ''
+# Login atau Sign Up Page
+def login_page():
+    st.title("Welcome")
+    choice = st.radio("Sign In or Sign Up", ["sign in", "sign up"])
 
-    if st.session_state.logged_in:
+    if choice == "sign up":
+        st.title("Sign Up Page")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        if st.button("Sign Up"):
+            if add_user(username, password):
+                st.success("Account created successfully! Please go to the Login page to sign in.")
+            else:
+                st.error("Username already exists. Please choose a different username.")
+            
+    else:
+        st.title("Sign In Page")
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        if st.button("Sign In"):
+            user = get_user(username, password)
+            if user:
+                st.session_state.logged_in = True
+                st.session_state.username = username
+                st.experimental_rerun()
+            else:
+                st.error("Invalid username or password")
+
+# Dashboard Page
+def dashboard_page():
         st.sidebar.title(f"Welcome, {st.session_state.username}")
         selected_page = st.sidebar.radio("Navigation", ["Home", "Logout"])
         if selected_page == "Home":
@@ -67,7 +76,7 @@ def main():
             jenis_kelamin = st.radio("Jenis kelamin anak:", ["Laki-laki", "Perempuan"])
             usia_anak = st.number_input("Usia anak (bulan):", min_value=6, max_value=60, step=6)
 
-            response = requests.get('http://127.0.0.1:5000/data')
+            response = requests.get('https://iot.herolab.id/data')
             if response.status_code == 200:
                 data_store = response.json()
                 if data_store:
@@ -131,13 +140,18 @@ def main():
             st.title('Anda telah logout')
             st.session_state.logged_in = False
             st.session_state.username = ''
+
+# Main function
+def main():
+    if 'logged_in' not in st.session_state:
+        st.session_state['logged_in'] = False
+
+    if is_logged_in():
+        dashboard_page()
     else:
-        st.sidebar.title("Navigation")
-        selected_page = st.sidebar.radio("Navigation", ["Login", "Sign Up"])
-        if selected_page == "Login":
-            login()
-        elif selected_page == "Sign Up":
-            signup()
+        login_page()
+
+
 
 if __name__ == '__main__':
     main()
