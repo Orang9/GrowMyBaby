@@ -1,4 +1,4 @@
-# Your Baby Data Viewer
+# Grow My Baby
 
 This program allows users to view data about their baby, including information about growth and health metrics. It is built using Streamlit and requires a connection to a database to fetch the data.
 
