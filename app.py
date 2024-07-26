@@ -1,19 +1,6 @@
 from flask import Flask, request, jsonify
-import os
-from pymongo import MongoClient
-from dotenv import load_dotenv
-
-# Memuat variabel dari file .env
-load_dotenv()
-
 app = Flask(__name__)
 
-mongo_uri = os.getenv("MONGO_URI")
-if not mongo_uri:
-    raise ValueError("MONGO_URI environment variable not set")
-
-client = MongoClient(mongo_uri)
-db = client["sic5_belajar"]
 data_store = []
 
 @app.route('/data', methods=['POST'])
