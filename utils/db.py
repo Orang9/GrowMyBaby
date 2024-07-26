@@ -82,3 +82,41 @@ def get_session_ids_for_user(username):
     if user_data and "chat_sessions" in user_data:
         session_ids = user_data["chat_sessions"]
     return session_ids if user_data else []
+
+def delete_session_from_db(session_id):
+    """Delete a session from the MongoDB collection."""
+    chat_collection.delete_one({"session_id": session_id})
+    users_collection.update_many({}, {"$pull": {"chat_sessions": session_id}})
+
+def get_anak():
+    anak = db["anak"]
+    data = anak.find()
+    return data
+
+def add_anak(nama, umur, jenis_kelamin, BB, TB, timestamp, user_id):
+    anak = db["anak"]
+    anak.insert_one({
+        "nama": nama,
+        "umur": umur,
+        "jenis_kelamin": jenis_kelamin,
+        "BB": BB,
+        "TB": TB,
+        "timestamp": timestamp,
+        "user_id": user_id
+    })
+
+def delete_anak(nama):
+    anak = db["anak"]
+    anak.delete_one({"nama": nama})
+
+    #buat fungsi update_anak
+def update_anak(nama, umur, jenis_kelamin, BB, TB, timestamp, user_id):
+    anak = db["anak"]
+    anak.update_one({"nama": nama}, {"$set": {
+        "umur": umur,
+        "jenis_kelamin": jenis_kelamin,
+        "BB": BB,
+        "TB": TB,
+        "timestamp": timestamp,
+        "user_id": user_id
+    }})
