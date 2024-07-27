@@ -1,9 +1,11 @@
 import streamlit as st
+import os
 import pandas as pd
 import requests
 import streamlit_authenticator as stauth
 import joblib
 from pymongo import MongoClient
+from dotenv import load_dotenv
 from typing import Generator
 from PIL import Image
 from utils.db import add_anak, cek_anak, delete_anak, add_user, fetch_users, get_session_ids_for_user, save_session_to_db, load_session_from_db, get_session_name, delete_session_from_db, update_anak
@@ -13,6 +15,7 @@ import datetime
 
 # Load Environment Variables------------------------------------------------------------------------
 
+load_dotenv()
 
 
 
@@ -317,7 +320,7 @@ def dashboard_page():
 
         # Load the Groq API key from the Streamlit secrets
         groq_client = Groq(
-            api_key = st.secrets["GROQ_API_KEY"],
+            api_key = st.secrets["GROQ_API_KEY"]
         )
         model_from_groq = "llama-3.1-8b-instant"
 

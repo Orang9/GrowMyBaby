@@ -1,8 +1,11 @@
-import streamlit as st
+import os
 from pymongo import MongoClient
+from dotenv import load_dotenv
 import bcrypt
+import streamlit as st
 
 # Memuat variabel lingkungan dari file .env
+load_dotenv()
 
 # Ambil URI MongoDB dari environment variable
 mongo_uri = st.secrets["MONGO_URI"]
