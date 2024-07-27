@@ -6,7 +6,6 @@ openai==1.37.1
 pandas==2.2.2
 Pillow==10.4.0
 pymongo==4.8.0
-python-dotenv==1.0.1
 python_bcrypt==0.3.2
 Requests==2.32.3
 scikit_learn==1.5.1
