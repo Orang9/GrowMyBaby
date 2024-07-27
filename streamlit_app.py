@@ -8,7 +8,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from typing import Generator
 from PIL import Image
-from utils.db import add_anak, delete_anak, add_user, fetch_users, get_session_ids_for_user, save_session_to_db, load_session_from_db, get_session_name, delete_session_from_db, update_anak
+from utils.db import add_anak, cek_anak, delete_anak, add_user, fetch_users, get_session_ids_for_user, save_session_to_db, load_session_from_db, get_session_name, delete_session_from_db, update_anak
 from models.test_models.test_stunting_classifier import stunting_classifier
 import datetime
 
@@ -65,7 +65,6 @@ def login_page():
                 st.error("Username already exists. Please choose a different username.")
             
     else:
-        st.title("Sign In Page")
         fields = {
         'Form name': 'Sign In',
         'Username': 'Username',
@@ -184,6 +183,19 @@ def dashboard_page():
             status = "Tinggi"
 
         st.subheader(f"Status Stunting Anak: {status}")
+        if st.button("Simpan Data Anak", key='post_to_mongodb_button'):
+            data_anak = {
+                "usia": usia_anak,
+                "berat_badan": berat_badan_anak,
+                "tinggi_badan": tinggi_badan_anak,
+                "jenis_kelamin": jenis_kelamin,
+                "status": status,
+                "keterangan": "" + keterangan
+            }
+            collection = db['data_anak']
+            collection.insert_one(data_anak)
+            add_anak(nama_anak, usia_anak, jenis_kelamin, berat_badan_anak, tinggi_badan_anak, status, keterangan, waktu_pengambilan_data, st.session_state.username)
+            st.success("Data berhasil dikirim ke MongoDB!")
 
         st.subheader("Berat Badan Rata-rata Anak Berdasarkan Usia:")
         st.dataframe(df_berat_tinggi[["Usia (bulan)", "Berat Badan Rata-rata Laki-laki (kg)", "Berat Badan Rata-rata Perempuan (kg)"]])
@@ -207,99 +219,91 @@ def dashboard_page():
         st.dataframe(pivot_df[["Umur (bulan)", "Tinggi Badan Rata-rata Laki-laki (cm)", "Tinggi Badan Rata-rata Perempuan (cm)"]])
 
         waktu_pengambilan_data = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        if st.button("Post to MongoDB", key='post_to_mongodb_button'):
-            data_anak = {
-                "usia": usia_anak,
-                "berat_badan": berat_badan_anak,
-                "tinggi_badan": tinggi_badan_anak,
-                "jenis_kelamin": jenis_kelamin,
-                "status": status,
-                "keterangan": "" + keterangan
-            }
-            collection = db['data_anak']
-            collection.insert_one(data_anak)
-            add_anak(nama_anak, usia_anak, jenis_kelamin, berat_badan_anak, tinggi_badan_anak, status, keterangan, waktu_pengambilan_data, st.session_state.username)
-            st.success("Data berhasil dikirim ke MongoDB!")
-
-        if st.button("Test Remove Session in Chatbot"):
-            delete_session_from_db("fe79e91c-47c4-493b-93f0-1d8ad0bf0a76")
+        
     elif selected_page == "You'r Baby":
         st.title("You'r Baby")
-        st.write("This is the page where you can see the data of you'r baby")
+        st.write("This is the page where you can see the data of your baby")
         user_id = st.session_state.username
         anak = db["anak"]
         data = anak.find({"user_id": user_id})
         df = pd.DataFrame(data)
-        if df.empty:
-            st.write(df)
-        else:
+        if not df.empty:
             df = df.drop(columns=["_id", "user_id"])
-            st.write(df)
+        st.write(df)
 
-        st.write("Tambahkan data anak:")
-        nama = st.text_input("Nama", key="nama_input", placeholder="Nama anak")
-        umur = st.number_input("Umur", key="umur_input", placeholder="Umur anak")
-        jenis_kelamin = st.radio("Jenis Kelamin", ["Laki-laki", "Perempuan"], key="jenis_kelamin_radio")
-        try: 
-            response = requests.get('https://iot.herolab.id/data')
-            if response.status_code == 200:
-                data_store = response.json()
-                if data_store:
-                    berat_badan_anak = data_store[-1]['weight']
-                    tinggi_badan_anak = data_store[-1]['height']
+        # Radio button untuk memilih operasi
+        operation = st.radio("Pilih operasi", ["Tambahkan", "Update", "Hapus"], key="operation_radio")
+
+        if operation == "Tambahkan" or operation == "Update":
+            st.write(f"{operation} data anak:")
+            nama = st.text_input("Nama", key="nama_input", placeholder="Nama anak")
+            umur = st.number_input("Umur Anak (bulan)", key="umur_input", placeholder="Umur anak", step=1)
+            jenis_kelamin = st.radio("Jenis Kelamin", ["Laki-laki", "Perempuan"], key="jenis_kelamin_radio")
+
+            try: 
+                response = requests.get('https://iot.herolab.id/data')
+                if response.status_code == 200:
+                    data_store = response.json()
+                    if data_store:
+                        berat_badan_anak = data_store[-1]['weight']
+                        tinggi_badan_anak = data_store[-1]['height']
+                    else:
+                        berat_badan_anak = 0.0
+                        tinggi_badan_anak = 0.0
+            except requests.exceptions.RequestException as e:
+                st.error("Gagal mengambil data dari server Flask")
+                st.warning("Silakan masukkan data berat dan tinggi badan anak secara manual.")
+                berat_badan_anak = 0.0
+                tinggi_badan_anak = 0.0
+                data_bb_tb_anak = load_form()
+                if data_bb_tb_anak:
+                    berat_badan_anak = data_bb_tb_anak["weight"]
+                    tinggi_badan_anak = data_bb_tb_anak["height"]
+
+            keterangan = st.text_area("Keterangan:", key='keterangan_input', placeholder="Keterangan (opsional)")
+            waktu_pengambilan_data = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            ml_model = joblib.load('models/saved_models/stunting_classifier.pkl')
+            status = stunting_classifier(ml_model, umur, jenis_kelamin, tinggi_badan_anak)
+
+            if status == 0:
+                status = "Normal"
+            elif status == 1:
+                status = "Severely Stunted"
+            elif status == 2:
+                status = "Stunted"
+            elif status == 3:
+                status = "Tinggi"
+
+            st.write(f"Status Stunting Anak: {status}")
+            st.write(f"Berat badan anak: {berat_badan_anak:.2f} kg")
+            st.write(f"Tinggi badan anak: {tinggi_badan_anak:.2f} cm")
+
+            if operation == "Tambahkan" and st.button("Tambahkan", key="tambahkan_button"):
+                add_anak(nama, umur, jenis_kelamin, berat_badan_anak, tinggi_badan_anak, status, keterangan, waktu_pengambilan_data, user_id)
+                st.success("Data anak berhasil ditambahkan!")
+                st.experimental_rerun()
+
+            if operation == "Update" and st.button("Update", key="update_button"):
+                if cek_anak(nama, user_id):
+                    update_anak(nama, umur, jenis_kelamin, berat_badan_anak, tinggi_badan_anak, status, keterangan, waktu_pengambilan_data, user_id)
+                    st.success("Data anak berhasil diupdate!")
+                    st.experimental_rerun()
                 else:
-                    berat_badan_anak = 0.0
-                    tinggi_badan_anak = 0.0
+                    st.error("Data anak tidak ada!")
 
-        except requests.exceptions.RequestException as e:
-            st.error("Gagal mengambil data dari server Flask")
-            st.warning("Silakan masukkan data berat dan tinggi badan anak secara manual.")
-            berat_badan_anak = 0.0
-            tinggi_badan_anak = 0.0
-            data_bb_tb_anak = load_form()
-            if data_bb_tb_anak:
-                berat_badan_anak = data_bb_tb_anak["weight"]
-                tinggi_badan_anak = data_bb_tb_anak["height"]
-            keterangan = st.text_input("Keterangan", key='keterangan_input', placeholder="Keterangan tambahan (opsional)")
-
-        ml_model = joblib.load('models/saved_models/stunting_classifier.pkl')
-
-        status = stunting_classifier(ml_model, umur, jenis_kelamin, tinggi_badan_anak)
-
-        if status == 0:
-            status = "Normal"
-        elif status == 1:
-            status = "Severely Stunted"
-        elif status == 2:
-            status = "Stunted"
-        elif status == 3:
-            status = "Tinggi"
-
-        st.write(f"Status Stunting Anak: {status}")
-        st.write(f"Berat badan anak: {berat_badan_anak:.2f} kg")
-        st.write(f"Tinggi badan anak: {tinggi_badan_anak:.2f} cm")
-        keterangan = st.text_area("Keterangan:", key='keterangan_input', placeholder="keterangan (opsional)")
-
-        waktu_pengambilan_data = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        user_id = st.session_state.username
-
-        if st.button("Tambahkan", key="tambahkan_button"):
-            add_anak(nama, umur, jenis_kelamin, berat_badan_anak, tinggi_badan_anak, status, keterangan, waktu_pengambilan_data,user_id)
-            st.success("Data anak berhasil ditambahkan!")
-            st.experimental_rerun()
-
-        if st.button("Update", key="update_button"):
-            update_anak(nama, umur, jenis_kelamin, berat_badan_anak, tinggi_badan_anak, status, keterangan, waktu_pengambilan_data, user_id)
-            st.success("Data anak berhasil diupdate!")
-            st.experimental_rerun()
-
-        #buatkan form untuk menghapus data anak
-        st.write("Hapus data anak:")
-        nama = st.text_input("Nama", key="nama_hapus_input", placeholder="Nama anak")
-        if st.button("Hapus", key="hapus_button"):
-            delete_anak(nama)
-            st.success("Data anak berhasil dihapus!")
-            st.experimental_rerun()
+        elif operation == "Hapus":
+            st.write("Hapus data anak:")
+            nama = st.text_input("Nama", key="nama_hapus_input", placeholder="Nama anak")
+            if st.button("Hapus", key="hapus_button"):
+                if cek_anak(nama, user_id):
+                    if delete_anak(nama, user_id):
+                        st.success("Data anak berhasil dihapus!")
+                        st.experimental_rerun()
+                    else:
+                        st.error("Terjadi kesalahan saat menghapus data anak!")
+                else:
+                    st.error("Data anak tidak ada!")
 
             
     elif selected_page == "ChatBot":

@@ -93,32 +93,46 @@ def get_anak():
     data = anak.find()
     return data
 
-def add_anak(nama, umur, jenis_kelamin, BB, TB, keterangan, timestamp,user_id):
+def add_anak(nama, umur, jenis_kelamin, BB, TB, status, keterangan, timestamp, user_id):
     anak = db["anak"]
     anak.insert_one({
-        "nama": nama,
-        "umur": umur,
-        "jenis_kelamin": jenis_kelamin,
-        "BB": BB,
-        "TB": TB,
-        "keterangan": keterangan,
-        "timestamp": timestamp,
+        "Nama Anak": nama,
+        "Umur (bulan)": umur,
+        "Jenis Kelamin": jenis_kelamin,
+        "Berat Badan (kg)": BB,
+        "Tinggi Badan (cm)": TB,
+        "Status": status,
+        "Keterangan": keterangan,
+        "DateTime": timestamp,
         "user_id": user_id
     })
 
-def delete_anak(nama):
+def delete_anak(nama, user_id):
     anak = db["anak"]
-    anak.delete_one({"nama": nama})
-
-    #buat fungsi update_anak
-def update_anak(nama, umur, jenis_kelamin, BB, TB, status, timestamp, user_id):
-    anak = db["anak"]
-    anak.update_one({"nama": nama}, {"$set": {
-        "umur": umur,
-        "jenis_kelamin": jenis_kelamin,
-        "BB": BB,
-        "TB": TB,
-        "status": status,
-        "timestamp": timestamp,
+    result = anak.delete_one({
+        "Nama Anak": nama,
         "user_id": user_id
-    }})
+    })
+    return result.deleted_count > 0
+
+def cek_anak(nama, user_id):
+    anak = db["anak"]
+    return anak.find_one({
+        "Nama Anak": nama,
+        "user_id": user_id
+    }) is not None
+
+def update_anak(nama, umur, jenis_kelamin, BB, TB, status, keterangan, timestamp, user_id):
+    anak = db["anak"]
+    anak.update_one(
+        {"Nama Anak": nama, "user_id": user_id},
+        {"$set": {
+            "Umur (bulan)": umur,
+            "Jenis Kelamin": jenis_kelamin,
+            "Berat Badan (kg)": BB,
+            "Tinggi Badan (cm)": TB,
+            "Status": status,
+            "Keterangan": keterangan,
+            "DateTime": timestamp
+        }}
+    )
