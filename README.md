@@ -35,15 +35,7 @@ Before you begin, ensure you have met the following requirements:
        ```sh
        source env/bin/activate
        ```
-  6. Install dependencies:
-     ```sh
-       poetry install
-     ```
-  7. Activate the Poetry shell:
-     ```sh
-       poetry shell
-     ```
-  8. Install requirements.txt
+  6. Install requirements.txt
      ```sh
        pip install -r requirements.txt
      ``` 
