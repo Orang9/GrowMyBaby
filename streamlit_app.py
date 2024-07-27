@@ -1,11 +1,9 @@
 import streamlit as st
-import os
 import pandas as pd
 import requests
 import streamlit_authenticator as stauth
 import joblib
 from pymongo import MongoClient
-from dotenv import load_dotenv
 from typing import Generator
 from PIL import Image
 from utils.db import add_anak, cek_anak, delete_anak, add_user, fetch_users, get_session_ids_for_user, save_session_to_db, load_session_from_db, get_session_name, delete_session_from_db, update_anak
@@ -15,13 +13,12 @@ import datetime
 
 # Load Environment Variables------------------------------------------------------------------------
 
-load_dotenv()
 
 
 
 # Connect to MongoDB Atlas--------------------------------------------------------------------------
 
-mongo_uri = os.getenv("MONGO_URI")
+mongo_uri = st.secrets("MONGO_URI")
 if not mongo_uri:
     raise ValueError("MONGO_URI environment variable not set")
 
@@ -32,7 +29,7 @@ db = client["sic5_belajar"]
 
 # Authentication-----------------------------------------------------------------------------------
 
-cookie_hash_key = os.getenv("COOKIE_HASH_KEY")
+cookie_hash_key = st.secrets("COOKIE_HASH_KEY")
 credentials = fetch_users()
 authenticator = stauth.Authenticate(
     credentials=credentials,
@@ -320,14 +317,14 @@ def dashboard_page():
 
         # Load the Groq API key from the Streamlit secrets
         groq_client = Groq(
-            api_key = os.getenv("GROQ_API_KEY"),
+            api_key = st.secrets("GROQ_API_KEY"),
         )
         model_from_groq = "llama-3.1-8b-instant"
 
         # Load the NVIDIA API key from the Streamlit secrets
         nvidia_client = OpenAI(
         base_url = "https://integrate.api.nvidia.com/v1", 
-        api_key = os.getenv("OPENAI_API_KEY")
+        api_key = st.secrets("OPENAI_API_KEY")
         )
         model_from_nvidia = "meta/llama-3.1-70b-instruct"
 
