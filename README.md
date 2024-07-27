@@ -39,10 +39,15 @@ Before you begin, ensure you have met the following requirements:
      ```sh
        poetry install
      ```
-  8. Activate the Poetry shell:
-    ```sh
+  7. Activate the Poetry shell:
+     ```sh
        poetry shell
      ```
+  8. Install requirements.txt
+     ```sh
+       pip install -r requirements.txt
+     ``` 
+    
 
     ## Running the Application
   Start the Streamlit application using the following command:
