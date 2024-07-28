@@ -10,7 +10,10 @@ This program allows users to view data about their baby, including information a
 
 Before you begin, ensure you have met the following requirements:
 
-- Python 3.x installed on your machine.
+- Python 3.8 or higher
+- Streamlit library
+- MongoDB Atlas or a local MongoDB instance
+- Required Python packages listed in `requirements.txt`
 - Poetry installed for dependency management. You can install it using:
 
   ```sh
