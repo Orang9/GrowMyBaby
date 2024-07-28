@@ -48,12 +48,21 @@ Before you begin, ensure you have met the following requirements:
      ``` 
     
 
-    ### Running the Application
+  ### Running the Application
   Start the Streamlit application using the following command:
   ```sh
   streamlit run .\streamlit_app.py
   ```
   This will start a local server, and you can view the application in your web browser at http://localhost:8501.
+
+
+  ### Configuration
+  Make sure to configure your database connection settings. Update the following lines in your code with your own secrets:
+  ```python
+  mongo_uri = st.secrets["MONGO_URI"]
+  api_key = st.secrets["GROQ_API_KEY"]
+  ```
+  Replace st.secrets["MONGO_URI"] and st.secrets["GROQ_API_KEY"] with your actual MongoDB URI and API key, respectively.
 
   #### Troubleshooting
   If you encounter any issues, ensure that all dependencies are correctly installed and that you have activated the virtual environment. Also, verify that your database connection settings are correctly configured.
@@ -61,7 +70,18 @@ Before you begin, ensure you have met the following requirements:
   #### Contributing
   If you wish to contribute to this project, please follow these steps:
   - Fork the repository.
-  - Create a new branch (git checkout -b feature-name).
-  - Make your changes and commit them (git commit -m 'Add some feature').
+  - Create a new branch:
+  ```sh
+  git checkout -b feature-name
+  ```
+  - Make your changes and commit them:
+  ```sh
+  git commit -m 'Add some feature'
+  ```
   - Push to the branch (git push origin feature-name).
+  ```sh
+  git push origin feature-name
+  ```
   - Open a pull request.
+  
+  We appreciate your contributions to make this project better!
