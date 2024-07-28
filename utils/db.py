@@ -11,7 +11,6 @@ db = client["sic5_belajar"]  # Replace with your database name
 users_collection = db["login"]  # Collection to store user information
 chat_collection = db["chat_history"] # Collection to store chat history
 
-pw_hashing_key = st.secrets["PASSWORD_HASH_KEY"]
 def get_user(username, password):
     """Retrieve a user from the database by username and password."""
     user = users_collection.find_one({"username": username, "password": password})
