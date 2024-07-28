@@ -342,6 +342,7 @@ def dashboard_page():
                     if st.button("Delete Session", key="delete_session_button"):
                         delete_session_from_db(st.session_state.session_id)
                         st.session_state.session_id = str(uuid.uuid4())
+                        st.session_state.has_session_name = False
                         st.session_state.messages = []
                         st.session_state.session_name = ''
                         selected_page = "ChatBot"
