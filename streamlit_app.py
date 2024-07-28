@@ -11,7 +11,7 @@ from models.test_models.test_stunting_classifier import stunting_classifier
 import datetime
 
 # Connect to MongoDB Atlas
-mongo_uri = os.getenv("MONGO_URI")
+mongo_uri = st.secrets["MONGO_URI"]
 if not mongo_uri:
     raise ValueError("MONGO_URI environment variable not set")
 
@@ -161,8 +161,9 @@ def dashboard_page():
                 }
                 collection = db['data_anak']
                 collection.insert_one(data_anak)
+                waktu_pengambilan_data = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 add_anak(nama_anak, usia_anak, jenis_kelamin, berat_badan_anak, tinggi_badan_anak, status, keterangan, waktu_pengambilan_data, st.session_state.username)
-                st.success("Data berhasil dikirim ke MongoDB!")
+                st.success("Data berhasil terkirim")
 
             st.subheader("Berat Badan Rata-rata Anak Berdasarkan Usia:")
             st.dataframe(df_berat_tinggi[["Usia (bulan)", "Berat Badan Rata-rata Laki-laki (kg)", "Berat Badan Rata-rata Perempuan (kg)"]])
@@ -184,8 +185,6 @@ def dashboard_page():
             pivot_df.columns = ['Umur (bulan)', 'Tinggi Badan Rata-rata Laki-laki (cm)', 'Tinggi Badan Rata-rata Perempuan (cm)']
 
             st.dataframe(pivot_df[["Umur (bulan)", "Tinggi Badan Rata-rata Laki-laki (cm)", "Tinggi Badan Rata-rata Perempuan (cm)"]])
-
-            waktu_pengambilan_data = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
         elif selected_page == "You'r Baby":
             st.title("You'r Baby")
@@ -287,14 +286,14 @@ def dashboard_page():
 
             # Load the Groq API key from the Streamlit secrets
             groq_client = Groq(
-                api_key = os.getenv("GROQ_API_KEY"),
+                api_key = st.secrets["GROQ_API_KEY"]
             )
             model_from_groq = "llama-3.1-8b-instant"
 
             # Load the NVIDIA API key from the Streamlit secrets
             nvidia_client = OpenAI(
             base_url = "https://integrate.api.nvidia.com/v1", 
-            api_key = os.getenv("OPENAI_API_KEY")
+            api_key = st.secrets["OPENAI_API_KEY"]
             )
             model_from_nvidia = "meta/llama-3.1-70b-instruct"
 

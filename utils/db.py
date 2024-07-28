@@ -1,7 +1,7 @@
-import os
+import streamlit as st
 from pymongo import MongoClient
 
-mongo_uri = os.getenv("MONGO_URI")
+mongo_uri = st.secrets["MONGO_URI"]
 if not mongo_uri:
     raise ValueError("MONGO_URI environment variable not set")
 
@@ -11,7 +11,7 @@ db = client["sic5_belajar"]  # Replace with your database name
 users_collection = db["login"]  # Collection to store user information
 chat_collection = db["chat_history"] # Collection to store chat history
 
-pw_hashing_key = os.getenv("PASSWORD_HASH_KEY")
+pw_hashing_key = st.secrets["PASSWORD_HASH_KEY"]
 def get_user(username, password):
     """Retrieve a user from the database by username and password."""
     user = users_collection.find_one({"username": username, "password": password})
