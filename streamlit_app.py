@@ -1,4 +1,3 @@
-import openai
 import streamlit as st
 import os
 import pandas as pd
@@ -274,58 +273,188 @@ def dashboard_page():
 
                 
         elif selected_page == "ChatBot":
-            st.title("GrowMyBaby ChatBot")
-            messages = []
-            user_input = st.text_input("Ask GrowMyBaby ChatBot", key="user_input")
+            from groq import Groq
+            import uuid
+            from huggingface_hub import InferenceClient
+            from openai import OpenAI
 
-            if user_input:
-                user_message = {"role": "user", "content": user_input}
-                messages.append(user_message)
-                save_session_to_db(db, st.session_state.username, user_message)
+            # LLM Client setup--------------------------------------------------------------------------
 
-                st.markdown("#### Loading...")
+            # Load the model from the Hugging Face Hub
+            repo_id = "meta-llama/Meta-Llama-3-8B"
+            hf_client = InferenceClient(repo_id) 
 
-                response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages,
-                    temperature=0.6,
-                    stream=True,
-                )
+            # Load the Groq API key from the Streamlit secrets
+            groq_client = Groq(
+                api_key = st.secrets["GROQ_API_KEY"]
+            )
+            model_from_groq = "llama-3.1-8b-instant"
 
-                chat_responses = generate_chat_responses(response)
-                for chat_response in chat_responses:
-                    messages.append({"role": "assistant", "content": chat_response})
-                    save_session_to_db(db, st.session_state.username, {"role": "assistant", "content": chat_response})
-                    st.markdown(f"**Assistant:** {chat_response}")
+            # Load the NVIDIA API key from the Streamlit secrets
+            nvidia_client = OpenAI(
+            base_url = "https://integrate.api.nvidia.com/v1", 
+            api_key = st.secrets["OPENAI_API_KEY"]
+            )
+            model_from_nvidia = "meta/llama-3.1-70b-instruct"
 
-            if st.button("Clear Chat History"):
-                st.session_state["chat_history"] = []
-                st.success("Chat history cleared")
-
-            # Load and display saved sessions
-            session_ids = get_session_ids_for_user(st.session_state.username, db)
-            selected_session_id = st.selectbox("Select a chat session", session_ids)
-            if selected_session_id:
-                selected_session = load_session_from_db(db, selected_session_id)
-                for message in selected_session:
-                    if message['role'] == 'user':
-                        st.markdown(f"**User:** {message['content']}")
-                    elif message['role'] == 'assistant':
-                        st.markdown(f"**Assistant:** {message['content']}")
-                if st.button("Delete Session"):
-                    delete_session_from_db(db, selected_session_id)
-                    st.success("Chat session deleted")
-                    st.experimental_rerun()
-            elif selected_page == "Logout":
-                # authenticator.logout("Logout", "unrendered")
-                st.session_state.logged_in = False
-                st.session_state.username = ''
-                st.session_state.refresh = False
-                st.session_state.has_session_name = False
-                st.session_state.messages = []
+            # Initialize session state variables if they don't exist
+            if 'session_id' not in st.session_state:
                 st.session_state.session_id = ''
-                st.session_state.clear()
+            if 'messages' not in st.session_state:
+                st.session_state.messages = []
+            if 'has_session_name' not in st.session_state:
+                st.session_state.has_session_name = False
+            if 'refresh' not in st.session_state:
+                st.session_state.refresh = False
+            if 'session_name' not in st.session_state:
+                st.session_state.session_name = ''
+
+            # Set the app title
+            st.title("🤖 Chatbot Demo")
+
+            username = st.session_state.username
+
+            # Display session buttons with unique keys
+            sidebar_placeholder = st.sidebar.empty()
+            content_placeholder = st.empty()
+            with sidebar_placeholder.container():
+                st.sidebar.title("Chat Sessions")
+                
+                
+                if st.button("Create New Session", key="new_session_button", use_container_width=True):
+                    st.session_state.session_id = str(uuid.uuid4())
+                    st.session_state.messages = []
+                    st.session_state.has_session_name = False
+                    st.session_state.session_name = ''
+
+                for idx, sid in enumerate(get_session_ids_for_user(username)):
+                    session_name = get_session_name(sid)  # Retrieve session name from database
+                    if session_name:
+                        if st.sidebar.button(session_name, key=f"button_{sid}", use_container_width=True):
+                            st.session_state.session_id = sid
+                            st.session_state.messages = load_session_from_db(sid)
+                            st.session_state.has_session_name = True
+                            st.session_state.session_name = session_name
+            
+            if st.session_state.messages != []:
+                with content_placeholder.container():
+                    st.header(f":blue[{st.session_state.session_name}]")
+                    if st.button("Delete Session", key="delete_session_button"):
+                        delete_session_from_db(st.session_state.session_id)
+                        st.session_state.clear()
+                        selected_page = "ChatBot"
+                        st.session_state.refresh = True
+
+            # Generate a unique session ID if it doesn't exist
+            if "session_id" not in st.session_state:
+                st.session_state.session_id = str(uuid.uuid4())
+                st.session_state.has_session_name = False
+
+            # Initialize the messages list if it doesn't exist
+            if "messages" not in st.session_state:
+                st.session_state.messages = []
+                st.session_state.has_session_name = False
+
+            for message in st.session_state.messages:
+                avatar = '🤖' if message["role"] == "assistant" else '👨‍💻'
+                with st.chat_message(message["role"], avatar=avatar):
+                    st.markdown(message["content"])
+
+            if prompt := st.chat_input("Enter your prompt here..."):
+                user_message = {"role": "user", "content": prompt}
+                st.session_state.messages.append(user_message)
+
+                with st.chat_message("user", avatar='👨‍💻'):
+                    st.markdown(prompt)
+
+                save_session_to_db(st.session_state.session_id, username, st.session_state.session_id, st.session_state.messages)
+
+                try:
+                    chat_completion = groq_client.chat.completions.create(
+                        model=model_from_groq,
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": (
+                                    "Anda adalah asisten medis yang membantu, hormat, dan jujur."
+                                    "Hanya jawab pada hal yang berkaitan dengan kesehatan dan medis."
+                                    "Jawab dalam bahasa Indonesia."
+                                    "Jawaban Anda tidak boleh mengandung konten yang berbahaya, tidak etis, rasis, seksis, beracun, berbahaya, atau ilegal. "
+                                    "Pastikan bahwa respons Anda tidak bias secara sosial dan positif. Jika sebuah pertanyaan tidak masuk akal, atau tidak faktual, jelaskan alasannya daripada menjawab sesuatu yang tidak benar. "
+                                    "Jika Anda tidak tahu jawaban atas sebuah pertanyaan, jangan bagikan informasi yang salah."
+                                )
+                            }
+                        ] + [
+                            {
+                                "role": m["role"],
+                                "content": m["content"]
+                            } for m in st.session_state.messages
+                        ],
+                        stream=True
+                    )
+
+                    # Use the generator function with st.write_stream
+                    with st.chat_message("assistant", avatar="🤖"):
+                        chat_responses_generator = generate_chat_responses(chat_completion)
+                        full_response = st.write_stream(chat_responses_generator)
+                except Exception as e:
+                    st.error(e, icon="🚨")
+
+                # Append the full response to session_state.messages
+                assistant_message = {"role": "assistant", "content": full_response}
+                st.session_state.messages.append(assistant_message)
+
+                if not st.session_state.has_session_name:
+                    try:
+                        session_name_completion = groq_client.chat.completions.create(
+                            model=model_from_groq,
+                            messages=[
+                                {
+                                    "role": "system",
+                                    "content": (
+                                        "Anda adalah asisten yang membantu membuat judul untuk sesi obrolan."
+                                        "Judul harus singkat, jelas, dan menggambarkan topik obrolan."
+                                        "Jawab dalam bahasa Indonesia."
+                                        "Hanya berikan jawaban tidak lebih dari 50 karakter."
+                                        "Contoh jawaban yang baik: 'Obrolan tentang kesehatan anak'."
+                                    )
+                                },
+                                {
+                                    "role": "user",
+                                    "content": f"""
+                                    Tolong ringkas judul obrolan ini.
+
+                                    User: {prompt}
+                                    Assistant: {full_response}
+                                    """
+                                }
+                            ],
+                            stream=True
+                        )
+
+                        # Use the generator function with st.write_stream
+                        session_name_response = generate_chat_responses(session_name_completion)
+                        session_name = st.write_stream(session_name_response)
+                        st.session_state.has_session_name = True
+                        st.session_state.refresh = True
+
+                    except Exception as e:
+                        st.error(e, icon="🚨")
+
+                save_session_to_db(st.session_state.session_id, username, session_name, st.session_state.messages)
+            if st.session_state.refresh == True:
+                st.session_state.refresh = False
                 st.rerun()
+        elif selected_page == "Logout":
+            # authenticator.logout("Logout", "unrendered")
+            st.session_state.logged_in = False
+            st.session_state.username = ''
+            st.session_state.refresh = False
+            st.session_state.has_session_name = False
+            st.session_state.messages = []
+            st.session_state.session_id = ''
+            st.session_state.clear()
+            st.rerun()
 
 # Main function
 def main():
