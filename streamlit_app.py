@@ -9,10 +9,6 @@ from PIL import Image
 from utils.db import add_anak, cek_anak, delete_anak, add_user, get_session_ids_for_user, get_user, save_session_to_db, load_session_from_db, get_session_name, delete_session_from_db, update_anak
 from models.test_models.test_stunting_classifier import stunting_classifier
 import datetime
-from groq import Groq
-import uuid
-from huggingface_hub import InferenceClient
-from openai import OpenAI
 
 # Connect to MongoDB Atlas
 mongo_uri = st.secrets["MONGO_URI"]
@@ -277,7 +273,10 @@ def dashboard_page():
 
                 
         elif selected_page == "ChatBot":
-            
+            from groq import Groq
+            import uuid
+            from huggingface_hub import InferenceClient
+            from openai import OpenAI
 
             # LLM Client setup--------------------------------------------------------------------------
 
