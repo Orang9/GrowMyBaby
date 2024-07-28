@@ -341,7 +341,9 @@ def dashboard_page():
                     st.header(f":blue[{st.session_state.session_name}]")
                     if st.button("Delete Session", key="delete_session_button"):
                         delete_session_from_db(st.session_state.session_id)
-                        st.session_state.clear()
+                        st.session_state.session_id = str(uuid.uuid4())
+                        st.session_state.messages = []
+                        st.session_state.session_name = ''
                         selected_page = "ChatBot"
                         st.session_state.refresh = True
 
