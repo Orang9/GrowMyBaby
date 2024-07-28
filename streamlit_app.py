@@ -25,7 +25,7 @@ def is_logged_in():
 # Fungsi untuk logout
 def logout():
     st.session_state['logged_in'] = False
-    st.experimental_rerun()
+    st.rerun()
 
 # Login atau Sign Up Page
 def login_page():
@@ -51,7 +51,7 @@ def login_page():
             if user:
                 st.session_state.logged_in = True
                 st.session_state.username = username
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Invalid username or password")
 
@@ -248,13 +248,13 @@ def dashboard_page():
                 if operation == "Tambahkan" and st.button("Tambahkan", key="tambahkan_button"):
                     add_anak(nama, umur, jenis_kelamin, berat_badan_anak, tinggi_badan_anak, status, keterangan, waktu_pengambilan_data, user_id)
                     st.success("Data anak berhasil ditambahkan!")
-                    st.experimental_rerun()
+                    st.rerun()
 
                 if operation == "Update" and st.button("Update", key="update_button"):
                     if cek_anak(nama, user_id):
                         update_anak(nama, umur, jenis_kelamin, berat_badan_anak, tinggi_badan_anak, status, keterangan, waktu_pengambilan_data, user_id)
                         st.success("Data anak berhasil diupdate!")
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("Data anak tidak ada!")
 
@@ -265,7 +265,7 @@ def dashboard_page():
                     if cek_anak(nama, user_id):
                         if delete_anak(nama, user_id):
                             st.success("Data anak berhasil dihapus!")
-                            st.experimental_rerun()
+                            st.rerun()
                         else:
                             st.error("Terjadi kesalahan saat menghapus data anak!")
                     else:
@@ -444,7 +444,7 @@ def dashboard_page():
                 save_session_to_db(st.session_state.session_id, username, session_name, st.session_state.messages)
             if st.session_state.refresh == True:
                 st.session_state.refresh = False
-                st.experimental_rerun()
+                st.rerun()
         elif selected_page == "Logout":
             # authenticator.logout("Logout", "unrendered")
             st.session_state.logged_in = False
@@ -454,7 +454,7 @@ def dashboard_page():
             st.session_state.messages = []
             st.session_state.session_id = ''
             st.session_state.clear()
-            st.experimental_rerun()
+            st.rerun()
 
 # Main function
 def main():
