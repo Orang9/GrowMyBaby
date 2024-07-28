@@ -274,8 +274,6 @@ def dashboard_page():
         elif selected_page == "ChatBot":
             from groq import Groq
             import uuid
-            from huggingface_hub import InferenceClient
-            from openai import OpenAI
 
             # LLM Client setup--------------------------------------------------------------------------
 
