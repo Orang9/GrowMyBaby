@@ -2,7 +2,11 @@
 
 This program allows users to view data about their baby, including information about growth and health metrics. It is built using Streamlit and requires a connection to a database to fetch the data.
 
-## Prerequisites
+## Deployment
+
+[Streamlit](https://growmybaby-9pa37bvsxgstijyksgwgr4.streamlit.app/)
+
+### Prerequisites
 
 Before you begin, ensure you have met the following requirements:
 
@@ -13,7 +17,7 @@ Before you begin, ensure you have met the following requirements:
   curl -sSL https://install.python-poetry.org | python3 -
   ```
 
-  ## Installation
+  ### Installation
 
   Follow these steps to set up and run the program:
 
@@ -41,17 +45,17 @@ Before you begin, ensure you have met the following requirements:
      ``` 
     
 
-    ## Running the Application
+    ### Running the Application
   Start the Streamlit application using the following command:
   ```sh
   streamlit run .\streamlit_app.py
   ```
   This will start a local server, and you can view the application in your web browser at http://localhost:8501.
 
-  ### Troubleshooting
+  #### Troubleshooting
   If you encounter any issues, ensure that all dependencies are correctly installed and that you have activated the virtual environment. Also, verify that your database connection settings are correctly configured.
 
-  ### Contributing
+  #### Contributing
   If you wish to contribute to this project, please follow these steps:
   - Fork the repository.
   - Create a new branch (git checkout -b feature-name).
